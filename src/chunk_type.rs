@@ -1,5 +1,5 @@
-use core::str::FromStr;
 use core::fmt::{self, Display, Formatter};
+use core::str::FromStr;
 
 use crate::{PngError, Result};
 
@@ -16,7 +16,6 @@ impl TryFrom<[u8; 4]> for ChunkType {
 }
 
 impl FromStr for ChunkType {
-
     type Err = PngError;
 
     fn from_str(s: &str) -> Result<Self> {
@@ -25,7 +24,6 @@ impl FromStr for ChunkType {
         result.copy_from_slice(bytes);
         Ok(ChunkType { bytes: result }) // TODO: gerer l'erreur d'un chunk_type trop grand ou trop petit en renvoyant une erreur custom
     }
-
 }
 
 impl Display for ChunkType {
@@ -41,16 +39,20 @@ impl ChunkType {
 
     #[allow(dead_code)]
     pub fn is_valid(&self) -> bool {
-        if !self.is_reserved_bit_valid() { return false; }
+        if !self.is_reserved_bit_valid() {
+            return false;
+        }
         for byte in self.bytes.iter() {
-            if !byte.is_ascii_alphabetic() { return false; }
-        };
+            if !byte.is_ascii_alphabetic() {
+                return false;
+            }
+        }
         true
     }
 
     #[allow(dead_code)]
     pub fn is_critical(&self) -> bool {
-        return self.bytes[0].is_ascii_uppercase(); 
+        return self.bytes[0].is_ascii_uppercase();
     }
 
     #[allow(dead_code)]

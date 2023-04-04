@@ -1,5 +1,5 @@
-use crate::{PngError, Result};
 use crate::chunk_type::ChunkType;
+use crate::{PngError, Result};
 use core::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
@@ -40,7 +40,7 @@ impl Display for Chunk {
         write!(f, "length: {}\n\r", self.length())?;
         match self.data_as_string() {
             Ok(data) => write!(f, "data: {}\n\r", data)?,
-            Err(_) => write!(f, "data: {}\n\r", "None")?
+            Err(_) => write!(f, "data: {}\n\r", "None")?,
         };
         write!(f, "crc: {}\n\r", self.crc())?;
         write!(f, "bytes: {:?}\n\r", self.as_bytes())
@@ -48,14 +48,10 @@ impl Display for Chunk {
 }
 
 impl Chunk {
-
     pub const CHUNK_METADATA_LENGTH: usize = 12;
 
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
-        Chunk {
-            chunk_type,
-            data,
-        }
+        Chunk { chunk_type, data }
     }
 
     pub fn length(&self) -> u32 {
@@ -86,7 +82,8 @@ impl Chunk {
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
-        let chunk_as_bytes: Vec<u8> = self.length()
+        let chunk_as_bytes: Vec<u8> = self
+            .length()
             .to_be_bytes()
             .iter()
             .chain(self.chunk_type.bytes().iter())
@@ -105,7 +102,10 @@ pub struct ChunkIterator<'a> {
 
 impl<'a> ChunkIterator<'a> {
     pub fn new(chunks: &'a [u8]) -> ChunkIterator {
-        ChunkIterator { cur: chunks, tainted: false }
+        ChunkIterator {
+            cur: chunks,
+            tainted: false,
+        }
     }
 }
 
@@ -113,9 +113,11 @@ impl<'a> Iterator for ChunkIterator<'a> {
     type Item = Result<Chunk>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.tainted || self.cur.len() == 0 { // tainted or empty
+        if self.tainted || self.cur.len() == 0 {
+            // tainted or empty
             return None; // no more chunks
-        } else if self.cur.len() < Chunk::CHUNK_METADATA_LENGTH { // short chunk
+        } else if self.cur.len() < Chunk::CHUNK_METADATA_LENGTH {
+            // short chunk
             self.tainted = true;
             return Some(Err(PngError::ShortChunk));
         }
@@ -123,7 +125,8 @@ impl<'a> Iterator for ChunkIterator<'a> {
         let len = super::utils::segment4(&self.cur[0..4]).unwrap(); // recuperer l'octet de la longueur du chunk
         let len = u32::from_be_bytes(len) as usize + Chunk::CHUNK_METADATA_LENGTH; // transformer la longueur en entier en ajoutant la longueur des metadatas
 
-        if self.cur.len() < len { // verifier si y a encore assez de donnees pour un chunk
+        if self.cur.len() < len {
+            // verifier si y a encore assez de donnees pour un chunk
             self.tainted = true;
             return Some(Err(PngError::ShortChunk));
         }
@@ -131,13 +134,15 @@ impl<'a> Iterator for ChunkIterator<'a> {
         let chunk = &self.cur[0..len]; // recuperer le chunk
         self.cur = &self.cur[len..]; // supprimer le chunk de la liste des chunks
 
-        Chunk::try_from(chunk).map_or_else( // convertir le chunk en objet Chunk
-            |e| { // si erreur
+        Chunk::try_from(chunk).map_or_else(
+            // convertir le chunk en objet Chunk
+            |e| {
+                // si erreur
                 self.tainted = true; // marquer le chunk comme tainted
                 Some(Err(e)) // retourner l'erreur
             },
             |chunk| Some(Ok(chunk)), // sinon retourner le chunk
-        )    
+        )
     }
 }
 
@@ -161,14 +166,16 @@ mod tests {
             .chain(crc.to_be_bytes().iter())
             .copied()
             .collect();
-        
+
         Chunk::try_from(chunk_data.as_ref()).unwrap()
     }
 
     #[test]
     fn test_new_chunk() {
         let chunk_type = ChunkType::from_str("RuSt").unwrap();
-        let data = "This is where your secret message will be!".as_bytes().to_vec();
+        let data = "This is where your secret message will be!"
+            .as_bytes()
+            .to_vec();
         let chunk = Chunk::new(chunk_type, data);
 
         println!("{}", chunk);
@@ -280,11 +287,11 @@ mod tests {
             .chain(crc.to_be_bytes().iter())
             .copied()
             .collect();
-        
+
         let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref()).unwrap();
 
         println!("{}", chunk);
-        
+
         let _chunk_string = format!("{}", chunk);
     }
 }

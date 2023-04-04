@@ -1,5 +1,5 @@
-use crate::{PngError, Result};
 use crate::chunk::{Chunk, ChunkIterator};
+use crate::{PngError, Result};
 use core::fmt::{self, Display, Formatter};
 
 pub struct Png {
@@ -19,16 +19,16 @@ impl TryFrom<&[u8]> for Png {
     type Error = PngError;
 
     fn try_from(value: &[u8]) -> Result<Self> {
-
-        if value.len() < Png::STANDARD_HEADER.len() || &value[0..Png::STANDARD_HEADER.len()] != Png::STANDARD_HEADER {
+        if value.len() < Png::STANDARD_HEADER.len()
+            || &value[0..Png::STANDARD_HEADER.len()] != Png::STANDARD_HEADER
+        {
             return Err(PngError::InvalidPngFile);
         }
 
-        let chunks = ChunkIterator::new(&value[Png::STANDARD_HEADER.len()..]).collect::<Result<Vec<Chunk>>>()?;
+        let chunks = ChunkIterator::new(&value[Png::STANDARD_HEADER.len()..])
+            .collect::<Result<Vec<Chunk>>>()?;
 
-        Ok(Png {
-            chunks: chunks
-        })
+        Ok(Png { chunks: chunks })
     }
 }
 
@@ -44,12 +44,12 @@ impl Png {
         self.chunks.push(chunk);
     }
 
-    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> { // changer on a besoin de supprimer que 1 chunk pas plusieurs TODO:
-        self.chunks.iter()
+    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+        self.chunks
+            .iter()
             .position(|chunk| chunk.chunk_type().to_string() == chunk_type)
-            .map(|index| {
-                self.chunks.remove(index)
-            }).ok_or(PngError::ChunkNotFound)
+            .map(|index| self.chunks.remove(index))
+            .ok_or(PngError::ChunkNotFound)
     }
 
     pub fn header(&self) -> &[u8; 8] {
@@ -62,12 +62,13 @@ impl Png {
     }
 
     pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
-
-        match self.chunks.iter()
-            .find(|chunk| chunk.chunk_type().to_string() == chunk_type) 
+        match self
+            .chunks
+            .iter()
+            .find(|chunk| chunk.chunk_type().to_string() == chunk_type)
         {
             Some(chunk) => Some(chunk),
-            None => None
+            None => None,
         }
     }
 
@@ -84,10 +85,10 @@ impl Png {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::chunk_type::ChunkType;
     use crate::chunk::Chunk;
-    use std::str::FromStr;
+    use crate::chunk_type::ChunkType;
     use std::convert::TryFrom;
+    use std::str::FromStr;
 
     fn testing_chunks() -> Vec<Chunk> {
         let mut chunks = Vec::new();
@@ -150,7 +151,6 @@ mod tests {
             .copied()
             .collect();
 
-
         let png = Png::try_from(bytes.as_ref());
 
         assert!(png.is_err());
@@ -178,7 +178,6 @@ mod tests {
         assert!(png.is_err());
     }
 
-
     #[test]
     fn test_list_chunks() {
         let png = testing_png();
@@ -192,7 +191,6 @@ mod tests {
         let chunk = png.chunk_by_type("FrSt").unwrap();
         assert_eq!(&chunk.chunk_type().to_string(), "FrSt");
         assert_eq!(&chunk.data_as_string().unwrap(), "I am the first chunk");
-
     }
 
     #[test]

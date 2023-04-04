@@ -1,6 +1,6 @@
 use std::io::{BufReader, Read};
 
-use crate::{Result, PngError};
+use crate::{PngError, Result};
 
 pub fn ref_buffer_to_u32(buf: &[u8]) -> u32 {
     let mut buf_reader = BufReader::new(buf);

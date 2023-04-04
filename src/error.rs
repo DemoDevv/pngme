@@ -12,6 +12,10 @@ pub enum PngError {
     ShortChunk,
     ChunkDataUTF8Error,
     FileNotFound,
+    WrongUrl,
+    DownloadFailed,
+    NoSource,
+    OutputFileNotSpecified,
 }
 
 use PngError::*;
@@ -29,6 +33,10 @@ impl Display for PngError {
             ShortChunk => "Short chunk",
             ChunkDataUTF8Error => "Chunk data is not UTF-8",
             FileNotFound => "File not found",
+            WrongUrl => "Wrong url",
+            DownloadFailed => "Download failed",
+            NoSource => "No source",
+            OutputFileNotSpecified => "Output file not specified",
         };
 
         write!(f, "{}", error_message)
